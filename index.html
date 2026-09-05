@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="LinguaShadow – Trainiere Sprach-Shadowing mit KI-gestütztem Aussprache-Feedback. Unterstützt Deutsch, Englisch, Französisch, Spanisch und Arabisch." />
+  <meta name="theme-color" content="#0a0e1a" />
+  <title>LinguaShadow – Sprach-Shadowing Übung</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- Ambient Background -->
+  <div class="bg-mesh" aria-hidden="true"></div>
+
+  <div class="app-wrapper">
+
+    <!-- ══════════════════════════════════════════
+         SCREEN 1: INPUT / CONFIGURATION
+    ══════════════════════════════════════════ -->
+    <div id="screen-input" class="screen">
+
+      <!-- Header -->
+      <header class="app-header">
+        <div class="logo">
+          <div class="logo-icon" aria-hidden="true">🗣️</div>
+          <span>Lingua<span style="color:var(--accent)">Shadow</span></span>
+        </div>
+        <span style="font-size:0.8125rem;color:var(--text-muted)">Unterstützt durch Web Speech API</span>
+      </header>
+
+      <!-- Hero -->
+      <main class="flex-1 flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-2xl">
+
+          <!-- Hero Text -->
+          <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
+                 style="background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);color:var(--accent);font-size:0.8125rem;font-weight:600">
+              ✨ 100% im Browser · Keine API-Kosten
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-black tracking-tight mb-4"
+                style="background:linear-gradient(135deg,#f1f5f9,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+              Meistere jede Sprache<br/>
+              <span style="-webkit-text-fill-color:transparent;background:linear-gradient(135deg,var(--accent),#06b6d4);-webkit-background-clip:text;background-clip:text;">durch Shadowing</span>
+            </h1>
+            <p class="text-base" style="color:var(--text-secondary);max-width:38rem;margin:0 auto;line-height:1.75">
+              Füge einen beliebigen Text ein, höre dir die natürliche Aussprache an, sprich sie laut nach
+              und erhalte sofortiges Feedback Wort für Wort.
+            </p>
+          </div>
+
+          <!-- Config Card -->
+          <div class="glass-card p-7 space-y-6">
+
+            <!-- Text Area -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="form-label" for="text-input">Dein Übungstext</label>
+                <div class="flex items-center gap-2">
+                  <span id="char-count" style="font-size:0.75rem;color:var(--text-muted)">0 Zeichen</span>
+                  <button id="btn-demo" class="btn btn-ghost btn-sm" type="button">
+                    📝 Beispiel laden
+                  </button>
+                </div>
+              </div>
+              <textarea
+                id="text-input"
+                class="form-control"
+                rows="7"
+                placeholder="Füge hier einen Text, Dialog oder Artikel ein… Der Text wird in Sätze unterteilt, die du nacheinander üben kannst."
+                spellcheck="false"
+                aria-label="Übungstext eingeben"
+              ></textarea>
+            </div>
+
+            <!-- Language & Speed Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+              <!-- Language -->
+              <div>
+                <label class="form-label" for="lang-select">Sprache</label>
+                <select id="lang-select" class="form-control" aria-label="Sprachauswahl">
+                  <option value="de-DE" selected>🇩🇪 Deutsch</option>
+                  <option value="en-US">🇺🇸 Englisch (US)</option>
+                  <option value="fr-FR">🇫🇷 Französisch</option>
+                  <option value="es-ES">🇪🇸 Spanisch</option>
+                  <option value="ar-SA">🇸🇦 Arabisch</option>
+                </select>
+              </div>
+
+              <!-- Playback Speed -->
+              <div>
+                <label class="form-label" for="rate-slider">
+                  Wiedergabegeschwindigkeit
+                </label>
+                <div class="range-container" style="padding-top:0.5rem">
+                  <input type="range" id="rate-slider"
+                    min="0.5" max="1.5" step="0.05" value="1.0"
+                    aria-label="Wiedergabegeschwindigkeit" />
+                  <span id="rate-value" class="range-value">1.0x</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Voice Selector -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="form-label" for="voice-select">🎙️ TTS-Stimme</label>
+                <span id="voice-quality-badge" style="font-size:0.7rem;padding:2px 8px;border-radius:99px;background:rgba(139,92,246,0.15);color:var(--accent);border:1px solid rgba(139,92,246,0.3)"></span>
+              </div>
+              <select id="voice-select" class="form-control" aria-label="Stimmenauswahl">
+                <option value="">⏳ Stimmen werden geladen…</option>
+              </select>
+              <p id="voice-hint" style="font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem">
+                💡 Verwende <strong style="color:var(--accent)">Microsoft Edge</strong> für die besten Neural-Stimmen.
+              </p>
+            </div>
+
+            <!-- Pitch -->
+            <div>
+              <label class="form-label" for="pitch-slider">Tonhöhe</label>
+              <div class="range-container">
+                <input type="range" id="pitch-slider"
+                  min="0.7" max="1.3" step="0.05" value="1.0"
+                  aria-label="Tonhöhe" />
+                <span id="pitch-value" class="range-value">1.0</span>
+              </div>
+            </div>
+
+            <!-- Mic Test -->
+            <div id="mic-test-section">
+              <div class="flex items-center justify-between mb-2">
+                <label class="form-label">🎤 Mikrofon</label>
+                <span id="mic-status-badge" style="font-size:0.7rem;padding:2px 10px;border-radius:99px;background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.3)">Nicht getestet</span>
+              </div>
+              <button id="btn-test-mic" class="btn btn-secondary w-full" type="button">
+                🎤 Mikrofonzugriff testen
+              </button>
+              <p id="mic-guide" style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.6">
+                Klicke hier, um vor dem Start die Mikrofonberechtigung zu erteilen.
+              </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Start Button -->
+            <button id="start-btn" class="btn btn-primary btn-lg w-full" type="button">
+              🚀 Shadowing starten
+            </button>
+
+          </div>
+
+          <!-- Feature Pills -->
+          <div class="flex flex-wrap justify-center gap-3 mt-8">
+            <span class="feature-pill">🔊 Text-to-Speech</span>
+            <span class="feature-pill">🎙️ Spracherkennung</span>
+            <span class="feature-pill">📊 Wortgenauigkeit</span>
+            <span class="feature-pill">🔁 Auto-Modus</span>
+            <span class="feature-pill">🌍 5 Sprachen</span>
+          </div>
+
+        </div>
+      </main>
+
+    </div><!-- /screen-input -->
+
+
+    <!-- ══════════════════════════════════════════
+         SCREEN 2: SHADOWING SESSION
+    ══════════════════════════════════════════ -->
+    <div id="screen-session" class="screen">
+
+      <!-- Session Header -->
+      <header class="app-header">
+        <div class="logo" style="font-size:1rem">
+          <div class="logo-icon" aria-hidden="true" style="width:30px;height:30px;font-size:0.9rem">🗣️</div>
+          LinguaShadow
+        </div>
+
+        <!-- Auto Mode Toggle -->
+        <div class="flex items-center gap-3">
+          <span id="auto-label" style="font-size:0.8125rem;color:var(--text-secondary)">Auto ▶️</span>
+          <label class="toggle-switch" title="Automatischer Wechsel: geht zum nächsten Satz bei ≥80%">
+            <input type="checkbox" id="auto-toggle" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <button id="btn-quit" class="btn btn-ghost btn-sm">✕ Beenden</button>
+      </header>
+
+      <main class="flex-1 flex flex-col px-4 py-6 max-w-3xl mx-auto w-full gap-5">
+
+        <!-- Progress -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <div id="phase-badge" class="phase-badge phase-ready">⏳ Bereit</div>
+            <span id="progress-label" style="font-size:0.8125rem;color:var(--text-secondary)">Satz 1 von 1</span>
+          </div>
+          <div class="progress-track">
+            <div id="progress-bar" class="progress-fill" style="width:0%" role="progressbar"
+                 aria-label="Sitzungsfortschritt"></div>
+          </div>
+        </div>
+
+        <!-- Sentence Card -->
+        <div class="glass-card sentence-card">
+          <p id="sentence-text" class="sentence-text">Wird geladen…</p>
+        </div>
+
+        <!-- Waveform -->
+        <div id="waveform" class="waveform idle" aria-hidden="true">
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+          <div class="waveform-bar"></div>
+        </div>
+
+        <!-- Transcript + Score -->
+        <div class="glass-card p-4 space-y-3">
+          <div class="flex items-start justify-between gap-3">
+            <div style="flex:1;min-width:0">
+              <p class="form-label" style="margin-bottom:0.5rem">Deine Aussprache</p>
+              <div id="transcript-box" class="transcript-box" aria-live="polite" aria-atomic="false">
+                Deine Sprache erscheint hier…
+              </div>
+            </div>
+            <div id="score-display" style="flex-shrink:0;padding-top:1.5rem"></div>
+          </div>
+          <div id="feedback-words" class="flex flex-wrap gap-2" aria-live="polite"></div>
+          <!-- Retry countdown info -->
+          <p id="retry-info" style="font-size:0.8rem;margin-top:0.25rem;font-weight:500;min-height:1.2em"></p>
+          <!-- Play recording button — shown automatically on score ≥80% -->
+          <div style="margin-top:0.5rem">
+            <button id="btn-play-recording"
+              class="btn btn-secondary"
+              type="button"
+              style="display:none;gap:0.5rem;background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(59,130,246,0.2));border:1px solid rgba(139,92,246,0.4);color:var(--accent)">
+              🔊 Eigene Aufnahme abspielen
+            </button>
+          </div>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="glass-card p-4">
+          <p class="form-label" style="margin-bottom:0.75rem">Wiedergabe</p>
+          <div class="flex gap-3 flex-wrap">
+            <button id="btn-listen" class="btn btn-secondary flex-1" type="button">
+              🔊 Nochmals anhören <kbd style="font-size:0.7rem;opacity:0.5;margin-left:4px">L</kbd>
+            </button>
+            <button id="btn-slow" class="btn btn-secondary flex-1" type="button">
+              🐢 Langsam abspielen <kbd style="font-size:0.7rem;opacity:0.5;margin-left:4px">S</kbd>
+            </button>
+            <button id="btn-hear-yourself" class="btn btn-secondary" type="button"
+              title="Höre deine eigene Stimme über Kopfhörer beim Sprechen">
+              🎧 Dich selbst hören
+            </button>
+          </div>
+          <!-- Volume slider — shown only when Hear Yourself is active -->
+          <div id="hear-vol-row" style="display:none;align-items:center;gap:0.75rem;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border)">
+            <span style="font-size:0.75rem;color:var(--text-secondary);white-space:nowrap">🔊 Lautstärke</span>
+            <input type="range" min="0" max="1" step="0.02" value="1"
+              style="flex:1;accent-color:var(--success)"
+              oninput="setHearYourselfVolume(this.value)"
+              title="Lautstärke anpassen" />
+            <span id="hear-vol-label" style="font-size:0.75rem;font-weight:700;color:var(--success);min-width:2.5rem;text-align:right;font-family:'JetBrains Mono',monospace">100%</span>
+          </div>
+          <!-- VU Meter — animated level bar -->
+          <div id="vu-meter" style="display:none;margin-top:0.6rem">
+            <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:4px">Mikrofonpegel (bewegt sich beim Sprechen):</p>
+            <div style="height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden;border:1px solid var(--border)">
+              <div id="vu-bar" style="width:0%;height:100%;border-radius:5px;background:linear-gradient(90deg,#10b981,#34d399);transition:width 0.04s"></div>
+            </div>
+          </div>
+          <!-- Status / error message -->
+          <p id="hear-status-text" style="display:none;font-size:0.78rem;margin-top:0.5rem;line-height:1.6;padding:0.5rem 0.75rem;border-radius:0.5rem;background:rgba(255,255,255,0.04);border:1px solid var(--border)"></p>
+        </div>
+
+        <!-- Microphone + Navigation -->
+        <div class="glass-card p-5">
+          <div class="flex flex-col items-center gap-4">
+            <!-- Mic Button -->
+            <div class="relative flex flex-col items-center gap-2">
+              <button
+                id="btn-mic"
+                class="mic-btn mic-btn-idle"
+                type="button"
+                aria-label="Sprechen starten"
+                title="Leertaste drücken zum Umschalten"
+              >
+                🎙️
+              </button>
+              <span id="mic-label" style="font-size:0.8125rem;color:var(--text-secondary)">
+                Sprechen starten
+              </span>
+              <div style="font-size:0.7rem;color:var(--text-muted)">Leertaste</div>
+            </div>
+
+            <!-- Back / Try Again / Skip / Next -->
+            <div class="flex gap-3 w-full">
+              <button id="btn-back" class="btn btn-secondary flex-1" type="button">
+                ← Zurück <kbd style="font-size:0.7rem;opacity:0.5;margin-left:4px">B</kbd>
+              </button>
+              <button id="btn-try-again" class="btn btn-danger flex-1" type="button" disabled>
+                🔄 Wiederholen <kbd style="font-size:0.7rem;opacity:0.5;margin-left:4px">R</kbd>
+              </button>
+              <button id="btn-skip" class="btn btn-secondary flex-1" type="button">
+                Überspringen ⏭️ <kbd style="font-size:0.7rem;opacity:0.5;margin-left:4px">K</kbd>
+              </button>
+              <button id="btn-next" class="btn btn-success flex-1" type="button" disabled>
+                Weiter → <kbd style="font-size:0.7rem;opacity:0.5;margin-left:4px">→</kbd>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div><!-- /screen-session -->
+
+
+    <!-- ══════════════════════════════════════════
+         SCREEN 3: SESSION SUMMARY
+    ══════════════════════════════════════════ -->
+    <div id="screen-summary" class="screen">
+
+      <!-- Header -->
+      <header class="app-header">
+        <div class="logo">
+          <div class="logo-icon" aria-hidden="true">🗣️</div>
+          <span>Lingua<span style="color:var(--accent)">Shadow</span></span>
+        </div>
+        <span style="font-size:0.8125rem;color:var(--text-muted)">Sitzung abgeschlossen</span>
+      </header>
+
+      <main class="flex-1 px-4 py-10 max-w-3xl mx-auto w-full">
+
+        <!-- Celebration -->
+        <div class="text-center mb-10">
+          <div style="font-size:4rem;margin-bottom:0.5rem" role="img" aria-label="Party">🎉</div>
+          <h2 class="text-3xl font-bold tracking-tight mb-2">Sitzung abgeschlossen!</h2>
+          <p style="color:var(--text-secondary)">Hier ist dein Ergebnis. Übe weiter, um deine Aussprache zu verbessern.</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-3 gap-4 mb-8">
+          <div class="stat-card">
+            <div id="summary-accuracy" class="stat-value">0%</div>
+            <div class="stat-label">Durchschnittliche Genauigkeit</div>
+          </div>
+          <div class="stat-card">
+            <div id="summary-time" class="stat-value">00:00</div>
+            <div class="stat-label">Benötigte Zeit</div>
+          </div>
+          <div class="stat-card">
+            <div id="summary-sentences" class="stat-value">0/0</div>
+            <div class="stat-label">Geübte Sätze</div>
+          </div>
+        </div>
+
+        <!-- Challenging Sentences Review -->
+        <div class="glass-card p-6 mb-8">
+          <h3 class="font-semibold text-base mb-4" style="color:var(--text-secondary)">
+            📋 Sätze zur Überprüfung
+          </h3>
+          <div id="review-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-4 flex-wrap">
+          <button id="btn-practice-again" class="btn btn-primary btn-lg flex-1">
+            🔁 Nochmal üben
+          </button>
+          <button id="btn-new-text" class="btn btn-secondary btn-lg flex-1">
+            ✏️ Neuen Text eingeben
+          </button>
+        </div>
+
+        <!-- Keyboard Hint -->
+        <div class="mt-8 text-center">
+          <p style="font-size:0.75rem;color:var(--text-muted)">
+            Tastaturkürzel während der Sitzung:
+            <kbd class="kbd">Leertaste</kbd> Mikrofon ·
+            <kbd class="kbd">L</kbd> Anhören ·
+            <kbd class="kbd">S</kbd> Langsam ·
+            <kbd class="kbd">→</kbd> Weiter ·
+            <kbd class="kbd">R</kbd> Wiederholen
+          </p>
+        </div>
+
+      </main>
+    </div><!-- /screen-summary -->
+
+  </div><!-- /app-wrapper -->
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- Inline Tailwind extras & tiny utilities -->
+  <style>
+    .feature-pill {
+      padding: 0.375rem 0.875rem;
+      border-radius: 99px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-secondary);
+    }
+    kbd.kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+  </style>
+
+  <!-- App Script -->
+  <script src="app.js"></script>
+</body>
+</html>
